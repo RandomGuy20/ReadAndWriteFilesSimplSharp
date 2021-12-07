@@ -1,0 +1,177 @@
+/*******************************************************************************************
+  SIMPL+ Module Information
+  (Fill in comments below)
+*******************************************************************************************/
+/*
+Dealer Name:
+System Name:
+System Number:
+Programmer: Josh
+Comments:
+*/
+
+/*******************************************************************************************
+  Compiler Directives
+  (Uncomment and declare compiler directives as needed)
+*******************************************************************************************/
+#SYMBOL_NAME "LabelReadAndWriteV1.0"
+#CATEGORY "46" "FileOps"
+#DEFAULT_VOLATILE
+#ENABLE_STACK_CHECKING
+#ENABLE_TRACE
+#DEFINE_CONSTANT cMaxStrings 50
+//#DEFINE_CONSTANT cFileLocation "\\SerialLabel.txt"
+
+
+
+#HELP_BEGIN
+  File Name - JUST PUT The Files Name, no . word or txt or json or dat or ini
+#HELP_END
+
+
+/*******************************************************************************************
+ Include Libraries
+*******************************************************************************************/
+#includepath "D:\\Simpl#andPro\\VS2019 Libraries\\Sharp\\GenericHelpers\\GeneralHelpers\\GeneralHelpers\\bin\\Debug"
+#user_simplsharp_library "GeneralHelpers"
+
+/*******************************************************************************************
+ DIGITAL, ANALOG and SERIAL INPUTS and OUTPUTS
+*******************************************************************************************/
+DIGITAL_INPUT DebugPlus,DebugSharp,_skip_,Initialize;
+
+
+DIGITAL_OUTPUT DebugPlus_Fb,DebugSharp_Fb;
+
+STRING_OUTPUT _skip_,_skip_,_skip_,_skip_,_skip_,_skip_,Label_FB[cMaxStrings];
+
+/*******************************************************************************************
+ Parameters
+*******************************************************************************************/
+// STRING_PARAMETER
+
+/*******************************************************************************************
+ Parameter Properties
+*******************************************************************************************/
+STRING_PARAMETER _skip_,_skip_,_skip_,_skip_,_skip_,_skip_,FileName[40],_skip_,Label[cMaxStrings][50];
+
+#BEGIN_PARAMETER_PROPERTIES Label
+   propValidUnits =  unitString ;
+   propDefaultUnit = unitString;
+   propDefaultValue = "";
+#END_PARAMETER_PROPERTIES
+
+
+
+
+/*******************************************************************************************
+ Global Variables
+ (Uncomment and declare global variables as needed)
+ Note:  Be sure to initialize all declared STRING variables as needed
+        For example, in Function Main: myString = "";
+*******************************************************************************************/
+ INTEGER giDebugPLus,giDebugSharp,giAmount,i,x,t,giInit;
+// LONG_INTEGER
+// SIGNED_INTEGER
+// SIGNED_LONG_INTEGER
+ STRING gsData[1000],gsLabel[100][100],cFileLocation[50];
+
+ function StartOps()
+{
+	t = 0;
+    for(x = 1 to giAmount)
+    {
+        gsdata = gsdata + label[x] + "\n";
+    }
+	print("GSData comes to: %s",gsdata);
+	t = 1;
+}
+
+
+
+ReadWriteFileSIMPL file;
+
+/*******************************************************************************************
+ Event Handlers
+*******************************************************************************************/
+
+PUSH debugPlus
+{
+    giDebugPLus = 1;
+    file.SetDebugSIMPL(giDebugPLus);
+    DebugPlus_Fb = giDebugPLus;
+}
+
+release debugPlus
+{
+    giDebugPLus = 0;
+    file.SetDebugSIMPL(giDebugPLus);
+    DebugPlus_Fb = giDebugPLus;
+}
+
+PUSH debugSharp
+{
+    giDebugSharp = 1;
+    file.SetDebugReadWrite(giDebugSharp);
+    DebugSharp_Fb = giDebugSharp;
+}
+
+release debugSharp
+{
+    giDebugSharp = 0;
+    file.SetDebugReadWrite(giDebugSharp);
+    DebugSharp_Fb = giDebugSharp;
+}
+
+release Initialize
+{
+	if(t = 1 && giInit = 0)
+	{
+		print("before sending to file gsData is:%s" , gsdata);
+        file.WriteToFile(gsData,cFileLocation);
+        file.Initialize(cFileLocation);
+        giInit = 1;
+	}
+ 
+}
+
+callback function SerialChangeHandler(integer num, string data)
+{
+    integer a;
+    a = num + 1;
+    gsLabel[a] = data;
+	Label_Fb[a] = gslabel[a];
+	print("The label at %d is %s",a,data);
+}
+
+/*******************************************************************************************
+ Main()
+
+*******************************************************************************************/
+
+Function Main()
+{
+    WaitForInitializationComplete();
+
+    RegisterDelegate(file, onSerialChange, SerialChangeHandler);
+    
+
+    cFileLocation = "\\" + FileName + ".txt";
+
+
+
+    for(giAmount = 50 to 1 step - 1)
+    {
+        IF(IsSignalDefined(Label_FB[giAmount]))
+		    break;
+
+    }
+
+    giInit = 0;
+	gsdata = "";
+    StartOps();
+
+
+}
+
+
